@@ -1,0 +1,306 @@
+tfsec
+
+Result #1 CRITICAL Security group rule allows egress to multiple public internet addresses. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:47
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   41    resource "aws_security_group_rule" "node_outbound" {
+   42      security_group_id = aws_security_group.data_plane_sg.id
+   43      type              = "egress"
+   44      from_port         = 0
+   45      to_port           = 0
+   46      protocol          = "-1"
+   47  [   cidr_blocks       = ["0.0.0.0/0"]
+   48    }
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-no-public-egress-sgr
+      Impact Your port is egressing data to the internet
+  Resolution Set a more restrictive cidr range
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/no-public-egress-sgr/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #2 CRITICAL Security group rule allows egress to multiple public internet addresses. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:80
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   74    resource "aws_security_group_rule" "control_plane_outbound" {
+   75      security_group_id = aws_security_group.control_plane_sg.id
+   76      type              = "egress"
+   77      from_port         = 0
+   78      to_port           = 65535
+   79      protocol          = -1
+   80  [   cidr_blocks       = ["0.0.0.0/0"]
+   81    }
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-no-public-egress-sgr
+      Impact Your port is egressing data to the internet
+  Resolution Set a more restrictive cidr range
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/no-public-egress-sgr/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #3 HIGH Subnet associates public IP address. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  registry.terraform.io/terraform-aws-modules/vpc/aws/home/mattia/terraform-infra-module/.terraform/modules/vpc/main.tf:366
+   via vpc_module.tf:1-26 (module.vpc)
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  359    resource "aws_subnet" "public" {
+  ...  
+  366  [   map_public_ip_on_launch         = var.map_public_ip_on_launch (true)
+  ...  
+  381    }
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-no-public-ip-subnet
+      Impact The instance is publicly accessible
+  Resolution Set the instance to not be publicly accessible
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/no-public-ip-subnet/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet#map_public_ip_on_launch
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Results #4-5 MEDIUM Control plane controller manager logging is not enabled. (2 similar results)
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  registry.terraform.io/terraform-aws-modules/eks/aws/home/mattia/terraform-infra-module/.terraform/modules/eks/main.tf:17-82
+   via eks_module.tf:1-55 (module.eks)
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   17  ┌ resource "aws_eks_cluster" "this" {
+   18  │   count = local.create ? 1 : 0
+   19  │ 
+   20  │   name                      = var.cluster_name
+   21  │   role_arn                  = local.cluster_role
+   22  │   version                   = var.cluster_version
+   23  │   enabled_cluster_log_types = var.cluster_enabled_log_types
+   24  │ 
+   25  └   vpc_config {
+   ..  
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Individual Causes
+  - registry.terraform.io/terraform-aws-modules/eks/aws/home/mattia/terraform-infra-module/.terraform/modules/eks/main.tf:1-55 (module.eks) 2 instances
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-eks-enable-control-plane-logging
+      Impact Logging provides valuable information about access and usage
+  Resolution Enable logging for the EKS control plane
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/eks/enable-control-plane-logging/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#enabled_cluster_log_types
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #6 LOW Security group rule does not have a description. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:41-48
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   41    resource "aws_security_group_rule" "node_outbound" {
+   42      security_group_id = aws_security_group.data_plane_sg.id
+   43      type              = "egress"
+   44      from_port         = 0
+   45      to_port           = 0
+   46      protocol          = "-1"
+   47      cidr_blocks       = ["0.0.0.0/0"]
+   48    }
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-add-description-to-security-group-rule
+      Impact Descriptions provide context for the firewall rule reasons
+  Resolution Add descriptions for all security groups rules
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/add-description-to-security-group-rule/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #7 LOW Security group explicitly uses the default description. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:51-61
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   51  ┌ resource "aws_security_group" "control_plane_sg" {
+   52  │   name   = "k8s-control-plane-sg"
+   53  │   vpc_id = module.vpc.vpc_id
+   54  │ 
+   55  │   tags = {
+   56  │     Name                                            = "k8s-control-plane-sg"
+   57  │     LAB                                             = "tesi_mattia"
+   58  │     infra                                           = "terraform"
+   59  └     "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
+   ..  
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-add-description-to-security-group
+      Impact Descriptions provide context for the firewall rule reasons
+  Resolution Add descriptions for all security groups
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/add-description-to-security-group/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #8 LOW Security group explicitly uses the default description. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:6-16
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    6  ┌ resource "aws_security_group" "data_plane_sg" {
+    7  │   name   = "k8s-data-plane-sg"
+    8  │   vpc_id = module.vpc.vpc_id
+    9  │ 
+   10  │   tags = {
+   11  │     Name                                            = "k8s-data-plane-sg"
+   12  │     LAB                                             = "tesi_mattia"
+   13  │     infra                                           = "terraform"
+   14  └     "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
+   ..  
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-add-description-to-security-group
+      Impact Descriptions provide context for the firewall rule reasons
+  Resolution Add descriptions for all security groups
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/add-description-to-security-group/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #9 LOW Security group rule does not have a description. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:65-72
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   65    resource "aws_security_group_rule" "control_plane_inbound" {
+   66      security_group_id = aws_security_group.control_plane_sg.id
+   67      type              = "ingress"
+   68      from_port         = 0
+   69      to_port           = 65535
+   70      protocol          = "tcp"
+   71      cidr_blocks       = flatten([local.private_subnet_cidr_blocks])
+   72    }
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-add-description-to-security-group-rule
+      Impact Descriptions provide context for the firewall rule reasons
+  Resolution Add descriptions for all security groups rules
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/add-description-to-security-group-rule/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+Result #10 LOW Security group rule does not have a description. 
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  vpc_sec_groups.tf:74-81
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   74    resource "aws_security_group_rule" "control_plane_outbound" {
+   75      security_group_id = aws_security_group.control_plane_sg.id
+   76      type              = "egress"
+   77      from_port         = 0
+   78      to_port           = 65535
+   79      protocol          = -1
+   80      cidr_blocks       = ["0.0.0.0/0"]
+   81    }
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+          ID aws-ec2-add-description-to-security-group-rule
+      Impact Descriptions provide context for the firewall rule reasons
+  Resolution Add descriptions for all security groups rules
+
+  More Information
+  - https://aquasecurity.github.io/tfsec/v1.28.0/checks/aws/ec2/add-description-to-security-group-rule/
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+  - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  timings
+  ──────────────────────────────────────────
+  disk i/o             696.87µs
+  parsing              574.801086ms
+  adaptation           2.48467ms
+  checks               248.217944ms
+  total                826.20057ms
+
+  counts
+  ──────────────────────────────────────────
+  modules downloaded   0
+  modules processed    7
+  blocks processed     725
+  files read           33
+
+  results
+  ──────────────────────────────────────────
+  passed               20
+  ignored              0
+  critical             2
+  high                 1
+  medium               2
+  low                  5
+
+  20 passed, 10 potential problem(s) detected.
+
+regula
+
+FG_R00014: Auto Scaling groups should span two or more availability zones [Medium]
+           https://docs.fugue.co/FG_R00014.html
+
+  [1]: module.eks.module.self_managed_node_group.aws_autoscaling_group.this
+       in .terraform/modules/eks/modules/self-managed-node-group/main.tf:402:1
+       included at .terraform/modules/eks/node_groups.tf:338:12
+       included at eks_module.tf:2:13
+
+FG_R00054: VPC flow logging should be enabled [Medium]
+           https://docs.fugue.co/FG_R00054.html
+
+  [1]: module.vpc.aws_vpc.this
+       in .terraform/modules/vpc/main.tf:20:1
+       included at vpc_module.tf:2:13
+
+FG_R00089: VPC default security group should restrict all traffic [Medium]
+           https://docs.fugue.co/FG_R00089.html
+
+  [1]: module.vpc.aws_vpc.this
+       in .terraform/modules/vpc/main.tf:20:1
+       included at vpc_module.tf:2:13
+
+Found 3 problems.
+
+terrascan
+
+
+Violation Details -
+    
+	Description    :	Ensure VPC flow logging is enabled in all VPCs
+	File           :	git::https:/github.com/terraform-aws-modules/terraform-aws-vpc?ref=v3.18.1/main.tf
+	Module Name    :	vpc
+	Plan Root      :	./
+	Line           :	20
+	Severity       :	LOW
+	Rule Name      :	vpcFlowLogsNotEnabled
+	Rule ID        :	AC_AWS_0369
+	Resource Name  :	this
+	Resource Type  :	aws_vpc
+	Category       :	Logging and Monitoring
+	
+	-----------------------------------------------------------------------
+	
+
+Scan Summary -
+
+	File/Folder         :	/home/mattia/terraform-infra-module
+	IaC Type            :	terraform
+	Scanned At          :	2022-12-15 16:16:56.678429987 +0000 UTC
+	Policies Validated  :	184
+	Violated Policies   :	1
+	Low                 :	1
+	Medium              :	0
+	High                :	0
+	
+
