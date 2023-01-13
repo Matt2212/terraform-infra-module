@@ -18,21 +18,29 @@ module "eks" {
   cluster_security_group_id     = aws_security_group.control_plane_sg.id
 
   create_cloudwatch_log_group = false
-
+  cluster_enabled_log_types   = ["api", "authenticator", "audit", "scheduler", "controllerManager"]
 
   create_node_security_group = false
   node_security_group_id     = aws_security_group.data_plane_sg.id
 
   eks_managed_node_groups = {
     private-nodes = {
-      create         = true
+
+      name           = "private-nodes"
       capacity_type  = "ON_DEMAND"
       instance_types = ["t3a.small"]
-      desired_size   = 1
-      max_size       = 2
-      min_size       = 1
+
+      desired_size = 1
+      max_size     = 2
+      min_size     = 1
+
       iam_role_additional_policies = {
         "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      }
+
+      tags = {
+        LAB   = "tesi_mattia"
+        infra = "terraform"
       }
     }
   }

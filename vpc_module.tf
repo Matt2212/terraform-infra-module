@@ -8,11 +8,23 @@ module "vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
+  map_public_ip_on_launch = false
+
+  manage_default_security_group  = true
+  default_security_group_egress  = []
+  default_security_group_ingress = []
+  default_security_group_name    = "${var.eks_cluster_name}-default-security-group"
+
   private_subnets      = [for i in range(var.subnets_num) : cidrsubnet(var.cidr_block, 8, i)]
   private_subnet_names = [for i in range(var.subnets_num) : "private-subnet-${i}"]
   private_subnet_tags = {
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
   }
+  
+
+  enable_flow_log          = true
+  flow_log_destination_type = "s3"
+  flow_log_destination_arn = resource.aws_s3_bucket.log_bucket.arn
 
   vpc_tags = {
     Name                                            = var.vpc_name
