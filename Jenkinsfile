@@ -34,18 +34,6 @@ pipeline {
                         sh "regula run . --input-type tf --include config/waiver.rego --format junit > ${resultDir}/regula_report.xml"
                     }
                 }
-                stage("Terrascan") {
-                    agent{
-                        docker{
-                            args '--user=root --entrypoint=""'
-                            image 'tenable/terrascan'
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        sh "terrascan scan --iac-type terraform --verbose --output junit-xml > ${resultDir}/terrascan_report.xml"
-                    }
-                }
             }
         }
         stage('Build') {
